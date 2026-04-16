@@ -1,0 +1,109 @@
+stages:
+  - lint
+  - package
+  - deploy
+
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+variables:
+  KUBECONFORM_VERSION: "0.6.7"
+  K8S_VERSION: "1.31.0"   # match your k3s version, check with: kubectl version
+
+# ---------- LINT ----------
+
+yamllint:
+  stage: lint
+  image: pipelinecomponents/yamllint:latest
+  tags:
+    - docker
+  script:
+    - yamllint --version
+    - yamllint -c .yamllint.yaml . || yamllint .
+  allow_failure: false
+
+kubeconform:
+  stage: lint
+  image: alpine:3.20
+  tags:
+    - docker
+  before_script:
+    - apk add --no-cache curl tar
+    - curl -sSLo /tmp/kc.tar.gz "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+    - tar xzf /tmp/kc.tar.gz -C /usr/local/bin kubeconform
+  script:
+    - echo "Validating against Kubernetes ${K8S_VERSION}"
+    - kubeconform -kubernetes-version "${K8S_VERSION}" -strict -summary -ignore-missing-schemas -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{ .Group }}/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json' apps/ infrastructure/ namespaces/
+  allow_failure: false
+
+# Secret-Detection job is pulled in from the include above, runs in 'test' stage by default.
+# We remap it to 'lint' to keep all gates together:
+secret_detection:
+  stage: lint
+
+# ---------- PACKAGE ----------
+
+bundle-manifests:
+  stage: package
+  image: alpine:3.20
+  tags:
+    - docker
+  before_script:
+    - apk add --no-cache tar
+  script:
+    - mkdir -p dist
+    - echo "${CI_COMMIT_SHA}" > dist/COMMIT
+    - echo "${CI_PIPELINE_ID}" > dist/PIPELINE
+    - date -u +"%Y-%m-%dT%H:%M:%SZ" > dist/BUILT_AT
+    - tar czf "dist/homelab-k3s-${CI_COMMIT_SHORT_SHA}.tar.gz" namespaces/ infrastructure/ apps/
+    - ls -lh dist/
+  artifacts:
+    name: "manifests-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - dist/
+    expire_in: 30 days
+
+# ---------- DEPLOY ----------
+
+.deploy-template: &deploy-template
+  stage: deploy
+  image: bitnami/kubectl:${K8S_VERSION}
+  tags:
+    - docker
+  before_script:
+    - mkdir -p ~/.kube
+    - echo "${KUBECONFIG_B64}" | base64 -d > ~/.kube/config
+    - chmod 600 ~/.kube/config
+    - kubectl cluster-info
+  needs:
+    - job: bundle-manifests
+      artifacts: true
+
+deploy:namespaces:
+  <<: *deploy-template
+  script:
+    - kubectl apply -f namespaces/
+  when: manual
+  allow_failure: false
+
+deploy:infrastructure:
+  <<: *deploy-template
+  script:
+    - kubectl apply -R -f infrastructure/
+  when: manual
+  needs:
+    - job: deploy:namespaces
+      optional: true
+    - job: bundle-manifests
+      artifacts: true
+
+deploy:apps:
+  <<: *deploy-template
+  script:
+    - kubectl apply -R -f apps/
+  when: manual
+  needs:
+    - job: deploy:infrastructure
+      optional: true
+    - job: bundle-manifests
+      artifacts: true
