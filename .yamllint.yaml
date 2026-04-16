@@ -11,7 +11,7 @@ rules:
   truthy:
     allowed-values: ['true', 'false', 'on', 'off']
   document-start: disable
+  new-line-at-end-of-file: disable
 ignore: |
   .gitlab-ci.yml
   dist/
-  
