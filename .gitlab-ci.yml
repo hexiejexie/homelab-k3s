@@ -40,6 +40,8 @@ kubeconform:
 # We remap it to 'lint' to keep all gates together:
 secret_detection:
   stage: lint
+  tags:
+    - docker
 
 # ---------- PACKAGE ----------
 
