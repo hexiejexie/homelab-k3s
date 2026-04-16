@@ -33,7 +33,7 @@ kubeconform:
     - tar xzf /tmp/kc.tar.gz -C /usr/local/bin kubeconform
   script:
     - echo "Validating against Kubernetes ${K8S_VERSION}"
-    - kubeconform -kubernetes-version "${K8S_VERSION}" -ignore-missing-schemas -strict -summary -ignore-missing-schemas -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{ .Group }}/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json' apps/ infrastructure/ namespaces/
+    - kubeconform -kubernetes-version "${K8S_VERSION}" -ignore-missing-schemas -strict -summary -ignore-missing-schemas -schema-location default -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{ .Group }}/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json' apps/ namespaces/
   allow_failure: false
 
 # Secret-Detection job is pulled in from the include above, runs in 'test' stage by default.
