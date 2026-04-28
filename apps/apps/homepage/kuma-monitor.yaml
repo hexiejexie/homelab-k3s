@@ -1,0 +1,12 @@
+apiVersion: autokuma.bigboot.dev/v1
+kind: KumaEntity
+metadata:
+  name: homepage-monitor
+  namespace: apps
+spec:
+  config:
+    type: http
+    name: Homepage
+    url: https://homepage.kube.hexie.dev
+    interval: 60
+    maxretries: 3

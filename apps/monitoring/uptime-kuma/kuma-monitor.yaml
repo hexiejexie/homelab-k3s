@@ -1,0 +1,12 @@
+apiVersion: autokuma.bigboot.dev/v1
+kind: KumaEntity
+metadata:
+  name: uptime-kuma-monitor
+  namespace: monitoring
+spec:
+  config:
+    type: http
+    name: Uptime Kuma
+    url: https://uptime-kuma.kube.hexie.dev
+    interval: 60
+    maxretries: 3

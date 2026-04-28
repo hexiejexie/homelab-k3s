@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autokuma
+  namespace: monitoring
+  labels:
+    app: autokuma
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autokuma
+  template:
+    metadata:
+      labels:
+        app: autokuma
+    spec:
+      serviceAccountName: autokuma
+      containers:
+        - name: autokuma
+          image: ghcr.io/bigboot/autokuma:latest
+          env:
+            - name: AUTOKUMA__KUMA__URL
+              value: "http://uptime-kuma:3001"
+            - name: AUTOKUMA__KUBERNETES__ENABLED
+              value: "true"
+            - name: AUTOKUMA__DOCKER__ENABLED
+              value: "false"
+            - name: AUTOKUMA__KUMA__USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: autokuma-secrets
+                  key: AUTOKUMA__KUMA__USERNAME
+            - name: AUTOKUMA__KUMA__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: autokuma-secrets
+                  key: AUTOKUMA__KUMA__PASSWORD    
