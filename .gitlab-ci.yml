@@ -5,6 +5,11 @@ stages:
 
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml
+  
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - when: never
 
 variables:
   KUBECONFORM_VERSION: "0.6.7"
