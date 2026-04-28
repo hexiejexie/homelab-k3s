@@ -26,7 +26,7 @@ Single-node k3s running on a dedicated Proxmox VM. The existing Docker LXC stays
 | Certificates | Let's Encrypt via Cloudflare DNS challenge |
 
 ## repo structure
-
+```
 homelab-k3s/
 ├── infrastructure/        Cluster-level resources
 │   ├── traefik/           HelmChartConfig overrides + Cloudflare token
@@ -41,6 +41,7 @@ homelab-k3s/
 │   └── network/           AdGuard, Vaultwarden, WireGuard
 ├── namespaces/            Namespace definitions for the above groups
 └── docs/                  Screenshots and reference material
+```
 
 Each service directory contains its own manifests: `pvc.yaml`, `deployment.yaml`, `service.yaml`, `ingressroute.yaml`, optionally `secret.yaml`, `rbac.yaml`, and `kuma-monitor.yaml`. Secrets are gitignored and applied locally.
 
@@ -97,4 +98,3 @@ Uptime Kuma showing both the Homepage and Uptime Kuma monitors green, with KumaE
 
 * [hexiejexie/homelab](https://github.com/hexiejexie/homelab): the original Docker Compose homelab still in production.
 * [hexie.dev](https://hexie.dev): personal site and blog.
-* [imeanit.nl](https://imeanit.nl): freelance IT consultancy.
