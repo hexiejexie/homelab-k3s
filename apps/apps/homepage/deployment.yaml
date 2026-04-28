@@ -15,6 +15,7 @@ spec:
       labels:
         app: homepage
     spec:
+      serviceAccountName: homepage
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
@@ -22,10 +23,17 @@ spec:
             - containerPort: 3000
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
-              value: "*"
+              value: "homepage.kube.hexie.dev"
+          envFrom:
+            - secretRef:
+                name: homepage-secrets
           volumeMounts:
             - name: config
-              mountPath: /app/config
+              persistentVolumeClaim:
+                claimName: homepage-config
+            - name: media
+              hostPath:
+                path: /18tb
       volumes:
         - name: config
           persistentVolumeClaim:
